@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Get started — Bloom Together{% endblock %}
+{% block content %}
+<section class="form-page">
+    <div class="form-card">
+        <p class="eyebrow"><span class="eyebrow-line"></span> Your little world starts here</p>
+        <h1>Make room for<br><span>more us.</span></h1>
+        <form method="post" class="account-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}
+                <div class="form-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="field-help">{{ field.help_text }}</div>{% endif %}
+                    {% if field.errors %}<div class="field-errors" role="alert">{{ field.errors }}</div>{% endif %}
+                </div>
+            {% endfor %}
+            <button class="button form-submit" type="submit">Create your account <span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="form-switch">Already growing together? <a href="{% url 'login' %}">Sign in</a></p>
+    </div>
+</section>
+{% endblock %}

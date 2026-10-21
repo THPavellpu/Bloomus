@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Our Garden — Bloom Together{% endblock %}
+{% block content %}
+<section class="garden-dashboard">
+    <div class="dashboard-heading">
+        <p class="eyebrow"><span class="eyebrow-line"></span> Your shared little world</p>
+        <h1>A garden that<br><span>grows with you.</span></h1>
+        <p class="dashboard-intro">A little care goes a long way. See how your flowers are doing today.</p>
+    </div>
+
+    {% if plants %}
+        <div class="plant-grid">
+            {% for item in plants %}
+                <article class="plant-card">
+                    <div class="plant-art plant-art-{{ forloop.counter }}{% if item.just_watered %} plant-art-watered{% endif %}">
+                        <span class="plant-sun" aria-hidden="true"></span>
+                        {% if item.just_watered %}
+                            <span class="water-splash" aria-hidden="true"><i></i><i></i><i></i></span>
+                            <span class="visually-hidden">Your note just watered this flower.</span>
+                        {% endif %}
+                        <svg class="plant-illustration" viewBox="0 0 180 190" role="img" aria-label="{{ item.care.stage }} flower illustration">
+                            <path d="M90 164C89 133 91 102 89 72" fill="none" stroke="#63856B" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M90 131C70 113 54 114 44 120C54 136 69 141 90 137" fill="#A9C3A1"/>
+                            <path d="M90 111C109 92 124 93 135 99C125 115 110 121 90 117" fill="#8EAF8A"/>
+                            <path d="M52 166C75 160 103 160 128 166" fill="none" stroke="#C7B99F" stroke-width="2" stroke-linecap="round"/>
+                            <g transform="translate(89 66)">
+                                <ellipse cy="-19" rx="9" ry="17" fill="#D99591"/>
+                                <ellipse cx="18" cy="-6" rx="9" ry="17" transform="rotate(58 18 -6)" fill="#E5A9A1"/>
+                                <ellipse cx="11" cy="15" rx="9" ry="17" transform="rotate(122 11 15)" fill="#D99591"/>
+                                <ellipse cx="-11" cy="15" rx="9" ry="17" transform="rotate(58 -11 15)" fill="#E5A9A1"/>
+                                <ellipse cx="-18" cy="-6" rx="9" ry="17" transform="rotate(122 -18 -6)" fill="#D99591"/>
+                                <circle r="8" fill="#E9BD77"/>
+                            </g>
+                            <circle cx="39" cy="68" r="3" fill="#D9B56F"/>
+                            <circle cx="140" cy="54" r="2.5" fill="#D99591"/>
+                        </svg>
+                        <span class="plant-art-label" aria-hidden="true">growing with love</span>
+                    </div>
+                    <div class="plant-details">
+                        <p class="plant-owner">{% if item.is_mine %}Your flower{% else %}{{ item.owner.username }}'s flower{% endif %}</p>
+                        <h2>{{ item.care.stage }}</h2>
+                        <p class="stage-description">{{ item.care.stage_description }}</p>
+                        <div class="care-status">
+                            <span class="care-status-dot" aria-hidden="true"></span>
+                            <span>{{ item.care.status }}</span>
+                        </div>
+                        <p class="care-description">{{ item.care.status_description }}</p>
+                        <div class="watered-time">
+                            <span class="water-drop" aria-hidden="true">⌁</span>
+                            {% if item.plant.last_watered_at %}
+                                Last watered {{ item.plant.last_watered_at|timesince }} ago
+                            {% else %}
+                                Not watered yet
+                            {% endif %}
+                        </div>
+                        {% if not item.is_mine %}
+                            <a class="button plant-message-action" href="{% url 'romantic_messages:write' %}">
+                                Write a message &amp; water <span aria-hidden="true">♡</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <section class="connection-empty">
+            <div class="empty-flower" aria-hidden="true">✿</div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> Better together</p>
+            <h2>Your garden is waiting<br>for its other half.</h2>
+            <p>Invite your favorite person to join you. When they arrive, you'll each have a flower to care for.</p>
+            <div class="connection-forms">
+                <form method="post" action="{% url 'couples:invite' %}">
+                    {% csrf_token %}
+                    <button class="button" type="submit">Create an invitation <span aria-hidden="true">↗</span></button>
+                </form>
+                <span class="form-divider">or join your partner</span>
+                <form class="join-form" method="post" action="{% url 'couples:accept' %}">
+                    {% csrf_token %}
+                    <label for="invitation-code">Invitation code</label>
+                    <input id="invitation-code" name="code" type="text" required maxlength="128" autocomplete="off" placeholder="Paste the code they shared">
+                    <button class="button button-outline" type="submit">Join your partner</button>
+                </form>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if membership and not partner %}
+        <section class="pending-invitation">
+            <div>
+                <p class="eyebrow"><span class="eyebrow-line"></span> Your invitation</p>
+                <h2>Your flower is ready for your person.</h2>
+                <p>Share your code privately. It expires in seven days and can only be used once.</p>
+                {% if new_invitation_code %}
+                    <label class="invitation-label" for="new-invitation-code">Your private invitation code</label>
+                    <input class="invitation-code" id="new-invitation-code" type="text" readonly value="{{ new_invitation_code }}" aria-label="Invitation code; select and copy to share privately">
+                {% else %}
+                    <p class="invitation-refresh-note">Your previous code is not shown again for privacy. Create a fresh one to share it.</p>
+                {% endif %}
+            </div>
+            <form method="post" action="{% url 'couples:invite' %}">
+                {% csrf_token %}
+                <button class="button button-outline" type="submit">Create a fresh code</button>
+            </form>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Love notes — Bloom Together{% endblock %}
+{% block content %}
+<section class="message-history-page">
+    <div class="dashboard-heading">
+        <p class="eyebrow"><span class="eyebrow-line"></span> Little reminders you're loved</p>
+        <h1>Your love<br><span>notes.</span></h1>
+        <p class="dashboard-intro">The kind words your person has sent your way.</p>
+    </div>
+
+    {% if received_messages %}
+        <div class="message-list">
+            {% for note in received_messages %}
+                <article class="received-note{% if not note.read_at %} received-note-unread{% endif %}">
+                    <div class="note-heading">
+                        <div>
+                            <p class="note-from">A note from <strong>{{ note.sender.username }}</strong></p>
+                            <time datetime="{{ note.sent_at|date:'c' }}">{{ note.sent_at|date:"F j, Y · g:i A" }}</time>
+                        </div>
+                        {% if note.read_at %}
+                            <span class="read-status">Read</span>
+                        {% else %}
+                            <span class="unread-status"><span aria-hidden="true"></span> Unread</span>
+                        {% endif %}
+                    </div>
+                    <p class="note-body">{{ note.body }}</p>
+                    {% if not note.read_at %}
+                        <form method="post" action="{% url 'romantic_messages:mark_read' note.pk %}">
+                            {% csrf_token %}
+                            <button class="text-link mark-read-button" type="submit">Mark as read</button>
+                        </form>
+                    {% else %}
+                        <p class="read-at">Read {{ note.read_at|timesince }} ago</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="empty-messages">
+            <span aria-hidden="true">♡</span>
+            <h2>Your next lovely note is on its way.</h2>
+            <p>When your partner sends you a message, it will be waiting here.</p>
+            <a class="button button-outline" href="{% url 'garden:dashboard' %}">Back to your garden</a>
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

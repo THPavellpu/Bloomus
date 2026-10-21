@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Bloom Together — Grow closer, one note at a time{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line"></span> A little place for the two of you</p>
+        <h1>Love grows in<br><span>the little things.</span></h1>
+        <p class="hero-description">
+            Leave a sweet note. Watch something bloom. Make a small ritual
+            that brings you closer, wherever life finds you.
+        </p>
+        <div class="hero-actions">
+            <a class="button" href="{% url 'signup' %}">
+                Start growing together <span aria-hidden="true">↗</span>
+            </a>
+            <a class="quiet-link" href="{% url 'login' %}">Already have an account? <span>Sign in</span></a>
+        </div>
+        <div class="hero-note">
+            <span class="note-sparkle" aria-hidden="true">✳</span>
+            <p><strong>For your favorite person.</strong><br>And all the ordinary days that become your favorite.</p>
+        </div>
+    </div>
+
+    <div class="garden-art" role="img" aria-label="An illustration of flowers growing together in a sunny garden">
+        <div class="sun-halo"></div>
+        <div class="art-label"><span class="label-dot"></span> your shared little world</div>
+        <svg class="flower-scene" viewBox="0 0 520 510" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M60 424C137 388 205 427 260 400C329 366 388 393 468 353" stroke="#8BA887" stroke-width="2" stroke-linecap="round"/>
+            <path d="M77 456C164 431 211 457 287 428C358 401 402 421 462 398" stroke="#D8C9AC" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M261 402C258 344 262 293 254 227" stroke="#63856B" stroke-width="5" stroke-linecap="round"/>
+            <path d="M256 335C221 312 198 313 184 320C201 345 225 351 257 344" fill="#A9C3A1"/>
+            <path d="M259 300C291 274 315 275 330 283C314 308 291 317 258 310" fill="#8EAF8A"/>
+            <path d="M258 374C284 348 306 346 324 352C312 379 290 390 260 385" fill="#A9C3A1"/>
+            <path d="M179 410C177 371 179 339 175 302" stroke="#789676" stroke-width="4" stroke-linecap="round"/>
+            <path d="M176 362C151 343 133 344 120 350C133 370 151 376 177 372" fill="#B6CBAF"/>
+            <path d="M177 337C200 318 218 318 231 324C219 345 201 352 177 348" fill="#96B491"/>
+            <path d="M344 391C343 355 346 329 342 297" stroke="#789676" stroke-width="4" stroke-linecap="round"/>
+            <path d="M343 354C319 336 301 337 288 343C301 363 319 369 344 364" fill="#B6CBAF"/>
+            <path d="M344 331C367 311 385 311 398 318C386 339 368 346 343 342" fill="#96B491"/>
+            <g transform="translate(254 209)">
+                <ellipse cy="-28" rx="13" ry="25" fill="#D99591"/>
+                <ellipse cx="27" cy="-9" rx="13" ry="25" transform="rotate(58 27 -9)" fill="#E5A9A1"/>
+                <ellipse cx="17" cy="23" rx="13" ry="25" transform="rotate(122 17 23)" fill="#D99591"/>
+                <ellipse cx="-17" cy="23" rx="13" ry="25" transform="rotate(58 -17 23)" fill="#E5A9A1"/>
+                <ellipse cx="-27" cy="-9" rx="13" ry="25" transform="rotate(122 -27 -9)" fill="#D99591"/>
+                <circle r="12" fill="#E9BD77"/>
+                <circle r="4" fill="#B87950"/>
+            </g>
+            <g transform="translate(174 286)">
+                <ellipse cy="-18" rx="9" ry="17" fill="#D9A85F"/>
+                <ellipse cx="18" cy="-6" rx="9" ry="17" transform="rotate(60 18 -6)" fill="#E7C17D"/>
+                <ellipse cx="11" cy="16" rx="9" ry="17" transform="rotate(120 11 16)" fill="#D9A85F"/>
+                <ellipse cx="-11" cy="16" rx="9" ry="17" transform="rotate(60 -11 16)" fill="#E7C17D"/>
+                <ellipse cx="-18" cy="-6" rx="9" ry="17" transform="rotate(120 -18 -6)" fill="#D9A85F"/>
+                <circle r="8" fill="#F1D991"/>
+            </g>
+            <g transform="translate(341 280)">
+                <ellipse cy="-18" rx="9" ry="17" fill="#C57D7D"/>
+                <ellipse cx="18" cy="-6" rx="9" ry="17" transform="rotate(60 18 -6)" fill="#DB9A91"/>
+                <ellipse cx="11" cy="16" rx="9" ry="17" transform="rotate(120 11 16)" fill="#C57D7D"/>
+                <ellipse cx="-11" cy="16" rx="9" ry="17" transform="rotate(60 -11 16)" fill="#DB9A91"/>
+                <ellipse cx="-18" cy="-6" rx="9" ry="17" transform="rotate(120 -18 -6)" fill="#C57D7D"/>
+                <circle r="8" fill="#F1D991"/>
+            </g>
+            <path d="M132 236C137 227 146 226 150 234C154 243 146 251 138 249C130 247 127 241 132 236Z" fill="#E6C37E"/>
+            <path d="M397 221C401 212 410 211 414 219C418 228 410 236 402 234C394 232 392 226 397 221Z" fill="#DFA7A0"/>
+            <path d="M410 282L414 290L423 291L416 297L418 306L410 301L402 306L404 297L397 291L406 290L410 282Z" fill="#DAB56F"/>
+            <circle cx="115" cy="284" r="4" fill="#D69B83"/>
+            <circle cx="432" cy="252" r="3" fill="#B9A882"/>
+            <circle cx="126" cy="327" r="3" fill="#B9A882"/>
+        </svg>
+        <div class="art-caption">
+            <span class="caption-icon" aria-hidden="true">♡</span>
+            <span>A garden, made by both of you</span>
+        </div>
+    </div>
+</section>
+<section class="values-strip" aria-label="Bloom Together values">
+    <div><span class="value-number">01</span><span>Small notes, big feelings</span></div>
+    <div><span class="value-number">02</span><span>A shared moment each day</span></div>
+    <div><span class="value-number">03</span><span>Something lovely to grow</span></div>
+</section>
+{% endblock %}

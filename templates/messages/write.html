@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Write a love note — Bloom Together{% endblock %}
+{% block content %}
+<section class="message-page">
+    <a class="back-to-garden" href="{% url 'garden:dashboard' %}">← Back to your garden</a>
+    <div class="message-card">
+        <div class="message-card-flower" aria-hidden="true">✿</div>
+        <p class="eyebrow"><span class="eyebrow-line"></span> A little love, sent their way</p>
+        <h1>Write a note<br>for <span>{{ recipient.username }}.</span></h1>
+        <p class="message-recipient">Your message will water {{ recipient.username }}'s flower.</p>
+
+        <form method="post" class="romantic-message-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            {{ form.idempotency_key }}
+            <div class="message-field">
+                <label for="{{ form.body.id_for_label }}">{{ form.body.label }}</label>
+                {{ form.body }}
+                <div class="message-guidance" id="message-help">
+                    <span>Up to 500 characters. A few honest words are lovely.</span>
+                    <span id="message-count" aria-live="polite">0 / 500</span>
+                </div>
+                {% if form.body.errors %}<div class="field-errors" role="alert">{{ form.body.errors }}</div>{% endif %}
+            </div>
+            <div class="message-preview">
+                <span class="preview-label">A little preview</span>
+                <p id="message-preview" aria-live="polite">Your kind words will appear here as you write.</p>
+                <span class="preview-signature">With love, {{ request.user.username }}</span>
+            </div>
+            <button class="button message-submit" type="submit">
+                Send your note &amp; water <span aria-hidden="true">♡</span>
+            </button>
+            <p class="message-privacy">Only you and {{ recipient.username }} can see this note.</p>
+        </form>
+    </div>
+</section>
+<script src="{% static 'js/message-preview.js' %}" defer></script>
+{% endblock %}

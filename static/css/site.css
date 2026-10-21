@@ -1,0 +1,396 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap');
+
+:root {
+    color-scheme: light;
+    --ink: #253c31;
+    --ink-soft: #526459;
+    --leaf: #486d52;
+    --leaf-dark: #36563f;
+    --paper: #f8f5ed;
+    --paper-deep: #eee8dc;
+    --rose: #d99591;
+    --gold: #d9b56f;
+    --white: #fffdf8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    min-width: 320px;
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: "DM Sans", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 25px 7.1%;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -.04em;
+    text-decoration: none;
+}
+
+.brand-mark { color: var(--rose); font-size: 25px; line-height: 1; }
+.brand-light { color: var(--leaf); font-weight: 400; }
+.header-nav { display: flex; align-items: center; gap: 26px; }
+.header-nav form { margin: 0; }
+.welcome-note { color: var(--ink-soft); font-size: 13px; }
+
+.text-link, .quiet-link {
+    color: var(--ink-soft);
+    font: inherit;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.text-link { padding: 8px 0; border: 0; background: none; cursor: pointer; }
+.text-link:hover, .quiet-link:hover span { color: var(--leaf-dark); }
+.button {
+    display: inline-flex;
+    min-height: 54px;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 0 24px;
+    border: 1px solid var(--leaf);
+    border-radius: 4px;
+    background: var(--leaf);
+    color: #fffdf8;
+    font: 600 13px "DM Sans", "Segoe UI", sans-serif;
+    text-decoration: none;
+    transition: background-color .2s ease, transform .2s ease;
+}
+
+.button:hover { transform: translateY(-2px); background: var(--leaf-dark); }
+.button-small { min-height: 42px; padding: 0 18px; font-size: 12px; }
+
+.hero {
+    display: grid;
+    grid-template-columns: minmax(0, .91fr) minmax(400px, 1.09fr);
+    align-items: center;
+    gap: clamp(32px, 7vw, 100px);
+    max-width: 1320px;
+    min-height: 630px;
+    margin: 0 auto;
+    padding: 52px 7.1% 72px;
+}
+
+.hero-copy { position: relative; z-index: 1; padding: 9px 0 0; }
+.eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 23px;
+    color: var(--leaf);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.eyebrow-line { width: 24px; height: 1px; background: var(--rose); }
+h1 {
+    margin: 0;
+    color: var(--ink);
+    font: 500 clamp(48px, 5.3vw, 72px)/1.08 "Playfair Display", Georgia, serif;
+    letter-spacing: -.055em;
+}
+
+h1 span { color: var(--leaf); font-style: italic; }
+.hero-description {
+    max-width: 390px;
+    margin: 25px 0 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.9;
+}
+
+.hero-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 29px; }
+.quiet-link { font-size: 11px; }
+.quiet-link span { margin-left: 3px; color: var(--leaf); font-weight: 700; }
+.hero-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 51px; }
+.note-sparkle { color: var(--rose); font-size: 19px; line-height: 1.2; }
+.hero-note p { margin: 0; color: #7d877a; font-size: 10px; line-height: 1.7; }
+.hero-note strong { color: var(--ink-soft); font-size: 11px; font-weight: 600; }
+
+.garden-art {
+    position: relative;
+    display: flex;
+    min-height: 490px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 48% 48% 3px 3px;
+    background: #e9ede2;
+    isolation: isolate;
+}
+
+.garden-art::before, .garden-art::after {
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgba(101, 132, 101, .13);
+    border-radius: 50%;
+    content: "";
+}
+
+.garden-art::before { width: 390px; height: 390px; }
+.garden-art::after { width: 450px; height: 450px; }
+.sun-halo { position: absolute; top: 61px; right: 17%; width: 126px; height: 126px; border-radius: 50%; background: #f1e7ce; }
+.art-label {
+    position: absolute;
+    top: 27px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transform: translateX(-50%);
+    color: #6d806a;
+    font-size: 9px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.label-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--rose); }
+.flower-scene { position: relative; z-index: 1; width: min(100%, 480px); margin-top: 30px; }
+.art-caption {
+    position: absolute;
+    right: 22px;
+    bottom: 21px;
+    left: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 0 15px;
+    border: 1px solid rgba(255, 253, 248, .7);
+    background: rgba(255, 253, 248, .76);
+    color: var(--ink-soft);
+    font: italic 14px "Playfair Display", Georgia, serif;
+    backdrop-filter: blur(8px);
+}
+
+.caption-icon { color: var(--rose); font: 20px "DM Sans", sans-serif; }
+.values-strip {
+    display: flex;
+    justify-content: center;
+    gap: clamp(26px, 6vw, 88px);
+    padding: 24px 7.1%;
+    border-top: 1px solid #e9e2d6;
+    color: var(--ink-soft);
+    font-size: 11px;
+}
+
+.values-strip div { display: flex; align-items: center; gap: 11px; }
+.value-number { color: #b28b73; font: italic 14px "Playfair Display", Georgia, serif; }
+.site-footer { display: flex; justify-content: center; gap: 8px; padding: 20px; color: #929487; font-size: 10px; }
+.footer-flower { color: var(--rose); }
+
+.form-page { display: flex; justify-content: center; padding: 72px 20px 95px; }
+.form-card { width: min(100%, 440px); padding: 42px; border: 1px solid #e9e2d6; background: var(--white); }
+.form-card h1 { margin-bottom: 27px; font-size: clamp(40px, 8vw, 54px); }
+.account-form { display: grid; gap: 17px; }
+.form-field { display: grid; gap: 7px; color: var(--ink-soft); font-size: 12px; }
+.form-field input {
+    width: 100%;
+    min-height: 45px;
+    padding: 10px 12px;
+    border: 1px solid #dcd8cd;
+    border-radius: 3px;
+    background: #fff;
+    color: var(--ink);
+    font: 14px "DM Sans", "Segoe UI", sans-serif;
+}
+
+.form-field input:focus { outline: 2px solid #92aa91; outline-offset: 1px; }
+.form-submit { width: 100%; margin-top: 5px; cursor: pointer; }
+.form-switch { margin: 22px 0 0; color: var(--ink-soft); font-size: 12px; text-align: center; }
+.form-switch a { color: var(--leaf); font-weight: 700; text-decoration: none; }
+.field-help, .helptext { color: #7d877a; font-size: 10px; line-height: 1.6; }
+.field-help ul { margin: 5px 0 0; padding-left: 17px; }
+.field-errors, .form-errors { color: #9a4646; font-size: 11px; line-height: 1.5; }
+.field-errors ul, .form-errors ul { margin: 0; padding-left: 18px; }
+.site-messages { max-width: 600px; margin: 0 auto; padding: 0 20px; color: var(--leaf); font-size: 13px; }
+.site-messages p { padding: 10px 14px; border-left: 2px solid var(--leaf); background: #eef1e8; }
+.site-messages .error { border-color: #b66b65; background: #f7ece9; color: #814942; }
+
+.garden-dashboard { max-width: 1120px; min-height: 70vh; margin: 0 auto; padding: 48px 6% 82px; }
+.dashboard-heading { margin-bottom: 37px; }
+.dashboard-heading h1 { font-size: clamp(43px, 6vw, 62px); }
+.dashboard-intro { max-width: 430px; margin: 16px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.8; }
+.plant-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.plant-card { overflow: hidden; border: 1px solid #e7e1d5; background: var(--white); }
+.plant-art { position: relative; display: grid; min-height: 230px; place-items: center; overflow: hidden; background: #e8eee4; }
+.plant-art-2 { background: #f0e9e2; }
+.plant-art::before, .plant-art::after { position: absolute; width: 210px; height: 210px; border: 1px solid rgba(99, 133, 107, .14); border-radius: 50%; content: ""; }
+.plant-art::after { width: 258px; height: 258px; }
+.plant-sun { position: absolute; top: 28px; right: 22%; width: 58px; height: 58px; border-radius: 50%; background: #f2e5c9; }
+.plant-illustration { position: relative; z-index: 1; width: 180px; margin-top: 16px; animation: flower-sway 5s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+.plant-art-label { position: absolute; bottom: 13px; color: #71866f; font: italic 11px "Playfair Display", Georgia, serif; }
+.plant-details { padding: 21px 23px 23px; }
+.plant-owner { margin: 0 0 5px; color: #987d70; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.plant-details h2 { margin: 0; font: 500 27px "Playfair Display", Georgia, serif; }
+.stage-description { margin: 7px 0 16px; color: var(--ink-soft); font-size: 12px; line-height: 1.6; }
+.care-status { display: flex; align-items: center; gap: 8px; color: var(--leaf-dark); font-size: 12px; font-weight: 700; }
+.care-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #91a982; box-shadow: 0 0 0 4px #edf2e9; }
+.care-description { min-height: 34px; margin: 9px 0 13px; color: #748076; font-size: 11px; line-height: 1.55; }
+.watered-time { padding-top: 13px; border-top: 1px solid #eee9e0; color: #8b8c80; font-size: 10px; }
+.water-drop { margin-right: 5px; color: #71939a; font-size: 17px; }
+.next-milestone, .pending-invitation { display: flex; align-items: center; gap: 18px; margin-top: 24px; padding: 21px 24px; border: 1px solid #e9e2d6; background: #f3f0e8; }
+.milestone-flower { color: var(--rose); font-size: 27px; }
+.next-milestone div { flex: 1; }
+.next-milestone h2, .pending-invitation h2 { margin: 0; font: 500 18px "Playfair Display", Georgia, serif; }
+.next-milestone p, .pending-invitation p { margin: 5px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.6; }
+.milestone-button, .milestone-button:disabled { opacity: .65; cursor: not-allowed; }
+.connection-empty { max-width: 580px; margin: 48px auto 0; padding: 38px; border: 1px solid #e8e2d7; background: var(--white); text-align: center; }
+.empty-flower { margin-bottom: 14px; color: var(--rose); font-size: 40px; animation: flower-sway 4s ease-in-out infinite alternate; }
+.connection-empty .eyebrow { justify-content: center; }
+.connection-empty h2 { margin: 0; font: 500 clamp(31px, 6vw, 42px)/1.15 "Playfair Display", Georgia, serif; letter-spacing: -.03em; }
+.connection-empty > p:not(.eyebrow) { max-width: 390px; margin: 13px auto 0; color: var(--ink-soft); font-size: 12px; line-height: 1.8; }
+.connection-forms { display: grid; gap: 14px; max-width: 350px; margin: 25px auto 0; }
+.connection-forms > form:first-child .button { width: 100%; justify-content: space-between; }
+.form-divider { display: flex; align-items: center; gap: 10px; color: #959487; font-size: 10px; }
+.form-divider::before, .form-divider::after { height: 1px; flex: 1; background: #ece7de; content: ""; }
+.join-form { display: grid; gap: 8px; text-align: left; }
+.join-form label, .invitation-label { color: var(--ink-soft); font-size: 11px; }
+.join-form input, .invitation-code { min-height: 44px; padding: 10px 12px; border: 1px solid #dcd8cd; border-radius: 3px; background: #fff; color: var(--ink); font: 13px "DM Sans", "Segoe UI", sans-serif; }
+.join-form input:focus, .invitation-code:focus { outline: 2px solid #92aa91; outline-offset: 1px; }
+.button-outline { border-color: #b7c3b2; background: transparent; color: var(--leaf-dark); }
+.button-outline:hover { border-color: var(--leaf); background: #eef1e8; }
+.join-form .button { width: 100%; }
+.pending-invitation { align-items: flex-end; justify-content: space-between; }
+.pending-invitation > div { max-width: 570px; }
+.pending-invitation .eyebrow { margin-bottom: 8px; }
+.invitation-label { display: block; margin-top: 15px; font-weight: 600; }
+.invitation-code { display: block; width: min(100%, 390px); margin-top: 6px; font-family: Consolas, monospace; letter-spacing: .04em; }
+.invitation-refresh-note { color: #8b7768 !important; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
+@keyframes flower-sway { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }
+
+@media (max-width: 780px) {
+    .site-header { padding: 19px 6%; }
+    .hero { grid-template-columns: 1fr; gap: 38px; padding: 45px 7% 48px; }
+    .hero-copy { padding-top: 0; }
+    h1 { font-size: clamp(48px, 11vw, 68px); }
+    .hero-description { max-width: 440px; }
+    .hero-note { margin-top: 30px; }
+    .garden-art { width: min(100%, 540px); min-height: min(92vw, 440px); justify-self: center; }
+    .garden-art::before { width: 75vw; height: 75vw; max-width: 390px; max-height: 390px; }
+    .garden-art::after { width: 87vw; height: 87vw; max-width: 450px; max-height: 450px; }
+    .values-strip { flex-wrap: wrap; justify-content: flex-start; gap: 16px 30px; padding: 22px 7%; }
+    .garden-dashboard { padding: 37px 6% 60px; }
+    .plant-grid { grid-template-columns: 1fr; }
+    .plant-art { min-height: 210px; }
+    .next-milestone, .pending-invitation { align-items: flex-start; flex-wrap: wrap; padding: 18px; }
+    .milestone-button, .pending-invitation > form { width: 100%; }
+    .pending-invitation > form .button { width: 100%; }
+    .connection-empty { margin-top: 30px; padding: 29px 21px; }
+}
+
+@media (max-width: 420px) {
+    .brand { gap: 7px; font-size: 14px; }
+    .header-nav { gap: 8px; }
+    .header-nav .text-link { font-size: 10px; }
+    .welcome-note { display: none; }
+    .button-small { min-height: 38px; padding: 0 12px; }
+    .hero { padding-top: 35px; }
+    .hero .button { width: 100%; justify-content: space-between; }
+    .garden-art { border-radius: 48% 48% 3px 3px; }
+    .art-caption { right: 12px; bottom: 12px; left: 12px; min-height: 45px; font-size: 12px; }
+    .form-card { padding: 30px 23px; }
+    .garden-dashboard { padding-right: 5%; padding-left: 5%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    .plant-illustration, .empty-flower { animation: none; }
+}
+
+.plant-message-action { width: 100%; min-height: 45px; justify-content: space-between; margin-top: 17px; font-size: 11px; }
+.plant-art-watered { background-image: radial-gradient(circle at 50% 45%, rgba(255, 253, 248, .8), transparent 48%); }
+.water-splash { position: absolute; z-index: 2; top: 25px; left: 50%; display: flex; gap: 14px; transform: translateX(-50%); }
+.water-splash i { display: block; width: 9px; height: 13px; border-radius: 70% 30% 60% 40%; background: #79aeb0; opacity: 0; animation: water-fall .75s ease-out both; }
+.water-splash i:nth-child(2) { margin-top: -9px; animation-delay: .12s; }
+.water-splash i:nth-child(3) { animation-delay: .24s; }
+.plant-art-watered .plant-illustration { animation: flower-bloom .8s ease-out both; }
+@keyframes water-fall {
+    0% { opacity: 0; transform: translateY(-20px) rotate(-20deg) scale(.6); }
+    35% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(100px) rotate(15deg) scale(1); }
+}
+@keyframes flower-bloom {
+    0% { transform: scale(.94) rotate(-3deg); }
+    55% { transform: scale(1.08) rotate(2deg); }
+    100% { transform: scale(1) rotate(0); }
+}
+
+.message-page, .message-history-page { max-width: 900px; min-height: 70vh; margin: 0 auto; padding: 40px 6% 80px; }
+.back-to-garden { display: inline-block; margin-bottom: 20px; color: var(--leaf); font-size: 12px; text-decoration: none; }
+.back-to-garden:hover { color: var(--leaf-dark); text-decoration: underline; }
+.message-card { position: relative; max-width: 590px; margin: 0 auto; padding: clamp(27px, 6vw, 48px); border: 1px solid #e7e1d5; background: var(--white); }
+.message-card-flower { position: absolute; top: 26px; right: 30px; color: var(--rose); font-size: 30px; }
+.message-card h1, .message-history-page h1 { font-size: clamp(43px, 7vw, 58px); }
+.message-recipient { margin: 13px 0 27px; color: var(--ink-soft); font-size: 12px; line-height: 1.7; }
+.romantic-message-form { display: grid; gap: 19px; }
+.message-field { display: grid; gap: 8px; color: var(--ink-soft); font-size: 12px; }
+.message-field textarea { width: 100%; min-height: 145px; resize: vertical; padding: 14px; border: 1px solid #dcd8cd; border-radius: 3px; background: #fff; color: var(--ink); font: 14px/1.7 "DM Sans", "Segoe UI", sans-serif; }
+.message-field textarea:focus { outline: 2px solid #92aa91; outline-offset: 1px; }
+.message-guidance { display: flex; justify-content: space-between; gap: 14px; color: #8b8c80; font-size: 10px; }
+.message-preview { padding: 16px 18px; border-left: 2px solid var(--rose); background: #f8f4ed; }
+.preview-label { color: #987d70; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.message-preview p { min-height: 21px; margin: 8px 0; color: var(--ink); font: italic 16px/1.6 "Playfair Display", Georgia, serif; overflow-wrap: anywhere; }
+.preview-signature { color: #8b8c80; font-size: 10px; }
+.message-submit { width: 100%; justify-content: space-between; cursor: pointer; }
+.message-privacy { margin: -7px 0 0; color: #8b8c80; font-size: 10px; text-align: center; }
+.message-history-page { max-width: 800px; }
+.message-list { display: grid; gap: 15px; }
+.received-note { padding: 22px 24px; border: 1px solid #e8e2d7; background: var(--white); }
+.received-note-unread { border-left: 3px solid var(--rose); background: #fffdf8; }
+.note-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.note-from { margin: 0 0 5px; color: var(--ink-soft); font-size: 11px; }
+.note-from strong { color: var(--ink); }
+.note-heading time { color: #8b8c80; font-size: 10px; }
+.read-status, .unread-status { display: inline-flex; align-items: center; gap: 6px; color: #80917b; font-size: 10px; white-space: nowrap; }
+.unread-status { color: #a96e68; font-weight: 700; }
+.unread-status span { width: 6px; height: 6px; border-radius: 50%; background: var(--rose); }
+.note-body { margin: 20px 0; color: var(--ink); font: 500 18px/1.7 "Playfair Display", Georgia, serif; overflow-wrap: anywhere; white-space: pre-wrap; }
+.mark-read-button { color: var(--leaf); font-weight: 700; cursor: pointer; }
+.read-at { margin: 0; color: #8b8c80; font-size: 10px; }
+.empty-messages { margin-top: 30px; padding: 40px 25px; border: 1px solid #e8e2d7; background: var(--white); text-align: center; }
+.empty-messages > span { color: var(--rose); font-size: 37px; }
+.empty-messages h2 { margin: 12px 0 0; font: 500 25px "Playfair Display", Georgia, serif; }
+.empty-messages p { margin: 10px 0 20px; color: var(--ink-soft); font-size: 12px; }
+.empty-messages .button { min-height: 43px; }
+
+@media (max-width: 780px) {
+    .message-page, .message-history-page { padding: 32px 6% 60px; }
+}
+
+@media (max-width: 420px) {
+    .message-page, .message-history-page { padding-right: 5%; padding-left: 5%; }
+    .message-card { padding: 27px 22px; }
+    .message-card-flower { top: 20px; right: 21px; font-size: 25px; }
+    .message-guidance { align-items: flex-start; font-size: 9px; }
+    .received-note { padding: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .water-splash i, .plant-art-watered .plant-illustration { animation: none; opacity: 1; }
+}

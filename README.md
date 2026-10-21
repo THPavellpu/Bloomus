@@ -59,9 +59,32 @@ PostgreSQL, set `DB_ENGINE=postgresql` and configure `DB_NAME`, `DB_USER`,
 `DB_PASSWORD`, `DB_HOST`, and `DB_PORT`. The PostgreSQL driver is included in
 `requirements.txt`.
 
-Set `DJANGO_DEBUG=False`, provide a secure `DJANGO_SECRET_KEY`, and set
-`DJANGO_ALLOWED_HOSTS` to the deployment hostnames for production. Do not
+On Render, set `SECRET_KEY` to the secret you already created, `DEBUG=False`,
+`DATABASE_URL` to the PostgreSQL Internal Database URL, and `ALLOWED_HOSTS`
+to the web service hostname. `CSRF_TRUSTED_ORIGINS` may be set to the matching
+HTTPS origin; `RENDER_EXTERNAL_HOSTNAME` automatically adds the Render
+hostname to allowed hosts and its HTTPS origin to trusted origins. The
+existing `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, and `DJANGO_ALLOWED_HOSTS` names
+remain supported as fallbacks for local setups.
+
+WhiteNoise serves collected static files in production. Run
+`python manage.py collectstatic --noinput` during the Render build. Do not
 commit `.env` or real credentials.
+
+For the Render web service, use this build command:
+
+```text
+pip install -r requirements.txt && python manage.py collectstatic --noinput
+```
+
+Use this start command:
+
+```text
+gunicorn config.wsgi:application
+```
+
+Run database migrations against the Render PostgreSQL database only after
+confirming the `DATABASE_URL` is the intended database.
 
 ## Tests and checks
 
