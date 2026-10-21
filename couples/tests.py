@@ -13,6 +13,8 @@ from django.test import Client, SimpleTestCase, TestCase, TransactionTestCase, o
 from django.urls import reverse
 from django.utils import timezone
 
+from garden.models import FlowerPlant
+
 from .models import Couple, CoupleMembership, Invitation
 from .services import (
     CoupleRuleError,
@@ -144,6 +146,67 @@ class InvitationTests(TestCase):
             accept_invitation(self.partner, original.code)
         accept_invitation(self.partner, renewed.code)
 
+    def test_pending_inviter_can_join_partner_and_keep_their_plant(self):
+        own = create_invitation(self.partner)
+        plant = FlowerPlant.objects.get(owner=self.partner)
+        target = create_invitation(self.inviter)
+
+        couple = accept_invitation(self.partner, target.code)
+
+        self.assertEqual(couple.pk, target.invitation.couple_id)
+        self.assertEqual(couple.memberships.count(), 2)
+        self.assertFalse(Couple.objects.filter(pk=own.invitation.couple_id).exists())
+        self.assertFalse(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        self.assertEqual(FlowerPlant.objects.get(owner=self.partner).pk, plant.pk)
+        self.assertEqual(FlowerPlant.objects.count(), 2)
+        with self.assertRaisesRegex(CoupleRuleError, "not valid"):
+            accept_invitation(User.objects.create_user(username="late_joiner"), own.code)
+
+    def test_invalid_target_preserves_pending_invitation_and_plant(self):
+        own = create_invitation(self.partner)
+        plant = FlowerPlant.objects.get(owner=self.partner)
+
+        with self.assertRaises(CoupleRuleError):
+            accept_invitation(self.partner, "invalid")
+
+        self.assertEqual(
+            CoupleMembership.objects.get(user=self.partner).couple_id,
+            own.invitation.couple_id,
+        )
+        self.assertTrue(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        self.assertEqual(FlowerPlant.objects.get(owner=self.partner).pk, plant.pk)
+
+    def test_expired_target_preserves_pending_invitation(self):
+        own = create_invitation(self.partner)
+        target = create_invitation(self.inviter)
+        with patch(
+            "couples.services.timezone.now",
+            return_value=target.invitation.expires_at + timedelta(seconds=1),
+        ):
+            with self.assertRaisesRegex(CoupleRuleError, "expired"):
+                accept_invitation(self.partner, target.code)
+        self.assertTrue(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        self.assertEqual(
+            CoupleMembership.objects.get(user=self.partner).couple_id,
+            own.invitation.couple_id,
+        )
+
+    def test_failed_join_rolls_back_pending_invitation_replacement(self):
+        own = create_invitation(self.partner)
+        target = create_invitation(self.inviter)
+        with patch.object(
+            Invitation, "save", side_effect=RuntimeError("invitation write failed")
+        ):
+            with self.assertRaisesRegex(RuntimeError, "invitation write failed"):
+                accept_invitation(self.partner, target.code)
+        self.assertEqual(
+            CoupleMembership.objects.get(user=self.partner).couple_id,
+            own.invitation.couple_id,
+        )
+        self.assertTrue(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        target.invitation.refresh_from_db()
+        self.assertIsNone(target.invitation.used_at)
+
 
 @override_settings(PASSWORD_HASHERS=[FAST_PASSWORD_HASHER])
 class CoupleViewTests(TestCase):
@@ -174,6 +237,45 @@ class CoupleViewTests(TestCase):
         self.assertContains(response, "That invitation is not valid.")
         self.assertEqual(Couple.objects.count(), 0)
 
+    def test_pending_inviter_has_code_entry_before_and_after_refresh(self):
+        for response in (
+            self.client.post(reverse("couples:invite"), follow=True),
+            self.client.get(reverse("garden:dashboard")),
+        ):
+            self.assertContains(response, 'id="invitation-code"')
+            self.assertContains(response, 'name="code"')
+            self.assertContains(response, "Join your partner")
+
+    def test_pending_inviter_can_join_using_pasted_code(self):
+        own = create_invitation(self.inviter)
+        partner = User.objects.create_user(username="paste_target")
+        target = create_invitation(partner)
+        response = self.client.post(
+            reverse("couples:accept"), {"code": target.code}, follow=True
+        )
+        self.assertContains(response, "You and your partner are connected!")
+        self.assertNotContains(response, 'id="invitation-code"')
+        self.assertFalse(Couple.objects.filter(pk=own.invitation.couple_id).exists())
+        self.assertEqual(
+            CoupleMembership.objects.get(user=self.inviter).couple_id,
+            target.invitation.couple_id,
+        )
+
+    def test_connected_inviter_cannot_join_another_couple_using_code(self):
+        own = create_invitation(self.inviter)
+        partner = User.objects.create_user(username="connected_partner")
+        accept_invitation(partner, own.code)
+        other = User.objects.create_user(username="other_target")
+        target = create_invitation(other)
+        response = self.client.post(
+            reverse("couples:accept"), {"code": target.code}, follow=True
+        )
+        self.assertContains(response, "already connected to another partner")
+        self.assertNotContains(response, 'id="invitation-code"')
+        self.assertEqual(
+            CoupleMembership.objects.get(user=self.inviter).couple_id,
+            own.invitation.couple_id,
+        )
 
 @override_settings(PASSWORD_HASHERS=[FAST_PASSWORD_HASHER])
 class InvitationOnboardingTests(TestCase):
@@ -325,17 +427,33 @@ class InvitationOnboardingTests(TestCase):
         self.assertContains(response, "That invitation is not valid.")
         self.assertFalse(CoupleMembership.objects.filter(user=partner).exists())
 
-    def test_self_invitation_and_existing_membership_are_rejected(self):
+    def test_self_invitation_and_connected_membership_are_rejected(self):
         self.client.force_login(self.inviter)
         response = self.client.post(self.url, follow=True)
         self.assertContains(response, "own invitation")
         other = User.objects.create_user(username="already_inviting")
-        create_invitation(other)
+        other_invitation = create_invitation(other)
+        other_partner = User.objects.create_user(username="already_connected_partner")
+        accept_invitation(other_partner, other_invitation.code)
         self.client.force_login(other)
         response = self.client.post(self.url, follow=True)
         self.assertContains(response, "already connected to another partner")
         self.created.invitation.refresh_from_db()
         self.assertIsNone(self.created.invitation.used_at)
+
+    def test_pending_inviter_can_join_through_shared_link(self):
+        partner = User.objects.create_user(username="pending_link_partner")
+        own = create_invitation(partner)
+        plant = FlowerPlant.objects.get(owner=partner)
+        self.client.force_login(partner)
+        response = self.client.post(self.url, follow=True)
+        self.assertContains(response, "You and your partner are connected!")
+        self.assertEqual(
+            CoupleMembership.objects.get(user=partner).couple_id,
+            self.created.invitation.couple_id,
+        )
+        self.assertFalse(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        self.assertEqual(FlowerPlant.objects.get(owner=partner).pk, plant.pk)
 
     def test_continue_requires_csrf(self):
         csrf_client = Client(enforce_csrf_checks=True)
@@ -420,6 +538,8 @@ class ProductionInvitationCsrfTests(TestCase):
         partner = User.objects.create_user(
             username="csrf_existing_partner", password="MossyMeadow!9274"
         )
+        own = create_invitation(partner)
+        plant = FlowerPlant.objects.get(owner=partner)
         self.get_page(self.url)
         response = self.post_form(self.url, {"auth_action": "login"})
         self.assertEqual(response.url, reverse("login"))
@@ -431,8 +551,11 @@ class ProductionInvitationCsrfTests(TestCase):
             {"username": partner.username, "password": "MossyMeadow!9274"},
         )
         self.assertEqual(response.status_code, 302)
+        partner.refresh_from_db()
         self.assertEqual(partner.couple_membership.slot, 2)
         self.assertNotIn("pending_invitation_code", self.client.session)
+        self.assertFalse(Invitation.objects.filter(pk=own.invitation.pk).exists())
+        self.assertEqual(FlowerPlant.objects.get(owner=partner).pk, plant.pk)
 
     def test_signed_in_link_and_pasted_code_accept_with_csrf(self):
         for flow in ("link", "code"):
@@ -441,6 +564,7 @@ class ProductionInvitationCsrfTests(TestCase):
                     self.inviter = User.objects.create_user(username="csrf_code_inviter")
                     self.created = create_invitation(self.inviter)
                 partner = User.objects.create_user(username=f"csrf_{flow}_partner")
+                own = create_invitation(partner)
                 self.client.force_login(partner)
                 self.get_page(reverse("garden:dashboard"))
                 if flow == "link":
@@ -451,10 +575,12 @@ class ProductionInvitationCsrfTests(TestCase):
                         reverse("couples:accept"), {"code": self.created.code}
                     )
                 self.assertEqual(response.status_code, 302)
+                partner.refresh_from_db()
                 self.assertEqual(
                     partner.couple_membership.couple_id,
                     self.created.invitation.couple_id,
                 )
+                self.assertFalse(Invitation.objects.filter(pk=own.invitation.pk).exists())
                 self.client.logout()
 
     def test_null_and_foreign_origins_rejected_even_with_valid_tokens(self):
@@ -565,6 +691,74 @@ class RenderEnvironmentTests(SimpleTestCase):
 
 @override_settings(PASSWORD_HASHERS=[FAST_PASSWORD_HASHER])
 class ConcurrentInvitationAcceptanceTests(TransactionTestCase):
+    def test_reciprocal_pending_invitations_connect_once(self):
+        first = User.objects.create_user(username="reciprocal_first")
+        second = User.objects.create_user(username="reciprocal_second")
+        first_invitation = create_invitation(first)
+        second_invitation = create_invitation(second)
+        barrier = Barrier(2)
+
+        def accept(pair):
+            user_id, code = pair
+            close_old_connections()
+            try:
+                user = User.objects.get(pk=user_id)
+                barrier.wait(timeout=10)
+                try:
+                    accept_invitation(user, code)
+                    return True
+                except CoupleRuleError:
+                    return False
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(
+                accept,
+                ((first.pk, second_invitation.code), (second.pk, first_invitation.code)),
+            ))
+        self.assertEqual(sum(results), 1)
+        self.assertEqual(Couple.objects.count(), 1)
+        self.assertEqual(CoupleMembership.objects.count(), 2)
+        self.assertEqual(FlowerPlant.objects.count(), 2)
+        self.assertEqual(Invitation.objects.count(), 1)
+        self.assertEqual(Invitation.objects.filter(used_at__isnull=False).count(), 1)
+
+    def test_joining_and_someone_accepting_own_pending_code_cannot_double_connect(self):
+        owner = User.objects.create_user(username="race_pending_owner")
+        target_owner = User.objects.create_user(username="race_target_owner")
+        contender = User.objects.create_user(username="race_contender")
+        own = create_invitation(owner)
+        target = create_invitation(target_owner)
+        barrier = Barrier(2)
+
+        def accept(pair):
+            user_id, code = pair
+            close_old_connections()
+            try:
+                user = User.objects.get(pk=user_id)
+                barrier.wait(timeout=10)
+                try:
+                    accept_invitation(user, code)
+                    return True
+                except CoupleRuleError:
+                    return False
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = list(executor.map(
+                accept, ((owner.pk, target.code), (contender.pk, own.code)),
+            ))
+        self.assertEqual(sum(results), 1)
+        membership = CoupleMembership.objects.get(user=owner)
+        self.assertEqual(membership.couple.memberships.count(), 2)
+        self.assertEqual(FlowerPlant.objects.filter(owner=owner).count(), 1)
+        self.assertEqual(
+            CoupleMembership.objects.filter(user=contender).exists(),
+            membership.couple_id == own.invitation.couple_id,
+        )
+
     def test_only_one_partner_can_accept_the_same_invitation_concurrently(self):
         inviter = User.objects.create_user(
             username="shared_inviter",
@@ -621,6 +815,7 @@ class ConcurrentInvitationAcceptanceTests(TransactionTestCase):
             username="joining_user",
             password="a-long-test-password",
         )
+        own = create_invitation(joining_user)
         first = create_invitation(first_inviter)
         second = create_invitation(second_inviter)
         barrier = Barrier(2)
@@ -642,6 +837,7 @@ class ConcurrentInvitationAcceptanceTests(TransactionTestCase):
             results = list(executor.map(accept, (first.code, second.code)))
 
         self.assertEqual(sum(results), 1)
+        self.assertFalse(Couple.objects.filter(pk=own.invitation.couple_id).exists())
         self.assertEqual(CoupleMembership.objects.filter(user=joining_user).count(), 1)
         self.assertEqual(
             CoupleMembership.objects.filter(user=joining_user)

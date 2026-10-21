@@ -58,6 +58,14 @@ reserves the first membership slot; accepting it creates the partner's
 membership. Database constraints limit each couple to two members, each user
 to one couple, and each user to one plant.
 
+The **Partner invitation code** field remains visible in the garden until
+you are connected, even if you already created your own invitation. Creating
+an invitation only reserves a waiting garden; it does not mean you already
+have a partner. Accepting someone else's code or link cancels your own unused
+invitation atomically and keeps your existing plant. Once two partners are
+connected, neither can join another couple. Invalid or expired invitations
+leave your waiting garden and invitation unchanged.
+
 Plants are created as each couple membership is established. They start as
 baby plants and grow from successfully received partner notes: sprout at 1,
 bud at 3, and bloom at 7. Growth is derived from persisted watering messages,

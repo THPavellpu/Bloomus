@@ -94,15 +94,21 @@
                     {% csrf_token %}
                     <button class="button" type="submit">Create an invitation <span aria-hidden="true">↗</span></button>
                 </form>
-                <span class="form-divider">or join your partner</span>
-                <form class="join-form" method="post" action="{% url 'couples:accept' %}">
-                    {% csrf_token %}
-                    <label for="invitation-code">Invitation code</label>
-                    <input id="invitation-code" name="code" type="text" required maxlength="128" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="invitation-code-help" placeholder="e.g. BU-ABCD-EFGH-JKLM-NPQR">
-                    <p class="invitation-help" id="invitation-code-help">Paste your partner's code here. Uppercase or lowercase is fine.</p>
-                    <button class="button button-outline" type="submit">Join your partner</button>
-                </form>
             </div>
+        </section>
+    {% endif %}
+
+    {% if not partner %}
+        <section class="partner-code-entry" aria-labelledby="partner-code-heading">
+            <h2 id="partner-code-heading">Have your partner's invitation code?</h2>
+            <p>Paste it below to connect your gardens.</p>
+            <form class="join-form" method="post" action="{% url 'couples:accept' %}">
+                {% csrf_token %}
+                <label for="invitation-code">Partner invitation code</label>
+                <input id="invitation-code" name="code" type="text" required maxlength="128" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="invitation-code-help" placeholder="e.g. BU-ABCD-EFGH-JKLM-NPQR">
+                <p class="invitation-help" id="invitation-code-help">Uppercase or lowercase is fine.{% if membership %} Joining cancels your own unused invitation and keeps your plant.{% endif %}</p>
+                <button class="button" type="submit">Join your partner</button>
+            </form>
         </section>
     {% endif %}
 

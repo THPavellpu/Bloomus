@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError, OperationalError, connection, transaction
 from django.utils import timezone
 
@@ -79,6 +80,7 @@ def _create_invitation_once(user, code):
     now = timezone.now()
     try:
         with transaction.atomic():
+            get_user_model().objects.select_for_update().get(pk=user.pk)
             membership = (
                 CoupleMembership.objects.select_for_update()
                 .filter(user=user)
@@ -145,6 +147,24 @@ def accept_invitation(user, code):
 def _accept_invitation_once(user, normalized_code):
     try:
         with transaction.atomic():
+            target = Invitation.objects.filter(
+                token_hash=_hash_code(normalized_code)
+            ).first()
+            if target is None:
+                raise CoupleRuleError("That invitation is not valid.")
+            inviter_id = target.couple.memberships.filter(slot=1).values_list(
+                "user_id", flat=True
+            ).first()
+            if inviter_id is None:
+                raise CoupleRuleError("That invitation is no longer available.")
+
+            # Lock both users in a stable order before any membership changes,
+            # including replacing a waiting garden or reciprocal acceptances.
+            list(
+                get_user_model().objects.select_for_update()
+                .filter(pk__in=(user.pk, inviter_id))
+                .order_by("pk")
+            )
             invitation = (
                 Invitation.objects.select_for_update()
                 .filter(token_hash=_hash_code(normalized_code))
@@ -166,9 +186,19 @@ def _accept_invitation_once(user, normalized_code):
             if existing_membership is not None:
                 if existing_membership.couple_id == couple.pk:
                     raise CoupleRuleError("You cannot accept your own invitation.")
-                raise CoupleRuleError(
-                    "You are already connected to another partner."
+                waiting_couple = Couple.objects.select_for_update().get(
+                    pk=existing_membership.couple_id
                 )
+                if (
+                    existing_membership.slot != 1
+                    or waiting_couple.memberships.count() != 1
+                    or not Invitation.objects.filter(
+                        couple=waiting_couple, used_at__isnull=True
+                    ).exists()
+                ):
+                    raise CoupleRuleError(
+                        "You are already connected to another partner."
+                    )
 
             occupied_slots = set(
                 couple.memberships.values_list("slot", flat=True)
@@ -176,8 +206,10 @@ def _accept_invitation_once(user, normalized_code):
             if occupied_slots != {1}:
                 raise CoupleRuleError("That invitation is no longer available.")
 
+            if existing_membership is not None:
+                waiting_couple.delete()
             CoupleMembership.objects.create(couple=couple, user=user, slot=2)
-            FlowerPlant.objects.create(owner=user)
+            FlowerPlant.objects.get_or_create(owner=user)
             invitation.used_at = timezone.now()
             invitation.save(update_fields=("used_at",))
     except IntegrityError as exc:
