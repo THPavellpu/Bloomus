@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Sign in — Bloom Together{% endblock %}
+{% block title %}Sign in — BloomUs{% endblock %}
 {% block content %}
 <section class="form-page">
     <div class="form-card">
@@ -18,7 +18,7 @@
             <input type="hidden" name="next" value="{{ next }}">
             <button class="button form-submit" type="submit">Sign in <span aria-hidden="true">↗</span></button>
         </form>
-        <p class="form-switch">New to Bloom Together? <a href="{% url 'signup' %}">Create an account</a></p>
+        <p class="form-switch">New to BloomUs? <a href="{% url 'signup' %}">Create an account</a></p>
     </div>
 </section>
 {% endblock %}

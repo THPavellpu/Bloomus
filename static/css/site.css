@@ -241,7 +241,7 @@ h1 span { color: var(--leaf); font-style: italic; }
 .plant-art::before, .plant-art::after { position: absolute; width: 210px; height: 210px; border: 1px solid rgba(99, 133, 107, .14); border-radius: 50%; content: ""; }
 .plant-art::after { width: 258px; height: 258px; }
 .plant-sun { position: absolute; top: 28px; right: 22%; width: 58px; height: 58px; border-radius: 50%; background: #f2e5c9; }
-.plant-illustration { position: relative; z-index: 1; width: 180px; margin-top: 16px; animation: flower-sway 5s ease-in-out infinite alternate; transform-origin: 50% 90%; }
+.plant-illustration { position: relative; z-index: 1; width: 180px; margin-top: 16px; transform-origin: 50% 90%; }
 .plant-art-label { position: absolute; bottom: 13px; color: #71866f; font: italic 11px "Playfair Display", Georgia, serif; }
 .plant-details { padding: 21px 23px 23px; }
 .plant-owner { margin: 0 0 5px; color: #987d70; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -329,7 +329,8 @@ h1 span { color: var(--leaf); font-style: italic; }
 .water-splash i { display: block; width: 9px; height: 13px; border-radius: 70% 30% 60% 40%; background: #79aeb0; opacity: 0; animation: water-fall .75s ease-out both; }
 .water-splash i:nth-child(2) { margin-top: -9px; animation-delay: .12s; }
 .water-splash i:nth-child(3) { animation-delay: .24s; }
-.plant-art-watered .plant-illustration { animation: flower-bloom .8s ease-out both; }
+.plant-art-watered:not(.plant-animation-wilting) .plant-illustration,
+.plant-animation-growing .plant-illustration { animation: flower-bloom .8s ease-out both; }
 @keyframes water-fall {
     0% { opacity: 0; transform: translateY(-20px) rotate(-20deg) scale(.6); }
     35% { opacity: 1; }
@@ -339,6 +340,22 @@ h1 span { color: var(--leaf); font-style: italic; }
     0% { transform: scale(.94) rotate(-3deg); }
     55% { transform: scale(1.08) rotate(2deg); }
     100% { transform: scale(1) rotate(0); }
+}
+.notes-link { position: relative; display: inline-flex; align-items: center; gap: 5px; }
+.notes-notification-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #c62f43; box-shadow: 0 0 0 2px var(--paper); }
+.garden-care-guide { max-width: 470px; color: var(--ink-soft); font-size: 11px; line-height: 1.7; }
+.plant-growth-shape { transform-box: view-box; transform-origin: 50% 87%; }
+.plant-stage-baby .plant-growth-shape { transform: scale(.5); }
+.plant-stage-sprout .plant-growth-shape { transform: scale(.75); }
+.plant-stage-bud .plant-growth-shape { transform: scale(.9); }
+.plant-animation-wilting .plant-illustration { animation: flower-droop 1.4s ease-out both; filter: saturate(.55); }
+.plant-animation-wilting { background-image: radial-gradient(circle at 50% 45%, #e6e1d3, transparent 60%); }
+.care-status-thirsty { color: #865b3b; }
+.care-status-thirsty .care-status-dot { background: #b88958; box-shadow: 0 0 0 4px #f5eee3; }
+.plant-unread-note { display: inline-block; margin-top: 12px; color: var(--leaf-dark); font-size: 11px; text-decoration: underline; }
+@keyframes flower-droop {
+    from { transform: rotate(0) scale(1); }
+    to { transform: rotate(10deg) scale(.94); }
 }
 
 .message-page, .message-history-page { max-width: 900px; min-height: 70vh; margin: 0 auto; padding: 40px 6% 80px; }
@@ -392,5 +409,9 @@ h1 span { color: var(--leaf); font-style: italic; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .water-splash i, .plant-art-watered .plant-illustration { animation: none; opacity: 1; }
+    .water-splash i,
+    .plant-art-watered:not(.plant-animation-wilting) .plant-illustration,
+    .plant-animation-growing .plant-illustration,
+    .plant-animation-wilting .plant-illustration { animation: none; opacity: 1; }
+    .plant-animation-wilting .plant-illustration { transform: rotate(10deg) scale(.94); }
 }

@@ -1,49 +1,68 @@
 {% extends "base.html" %}
-{% block title %}Our Garden — Bloom Together{% endblock %}
+{% block title %}Our Garden — BloomUs{% endblock %}
 {% block content %}
 <section class="garden-dashboard">
     <div class="dashboard-heading">
         <p class="eyebrow"><span class="eyebrow-line"></span> Your shared little world</p>
         <h1>A garden that<br><span>grows with you.</span></h1>
         <p class="dashboard-intro">A little care goes a long way. See how your flowers are doing today.</p>
+        {% if partner %}
+            <p class="garden-care-guide">Each partner note is a little water. A fresh note every three hours keeps your plants feeling loved.</p>
+        {% endif %}
     </div>
 
     {% if plants %}
         <div class="plant-grid">
             {% for item in plants %}
                 <article class="plant-card">
-                    <div class="plant-art plant-art-{{ forloop.counter }}{% if item.just_watered %} plant-art-watered{% endif %}">
+                    <div class="plant-art plant-art-{{ forloop.counter }} plant-stage-{{ item.care.stage_key }} plant-animation-{{ item.care.animation }}{% if item.just_watered %} plant-art-watered{% endif %}">
                         <span class="plant-sun" aria-hidden="true"></span>
                         {% if item.just_watered %}
                             <span class="water-splash" aria-hidden="true"><i></i><i></i><i></i></span>
                             <span class="visually-hidden">Your note just watered this flower.</span>
                         {% endif %}
                         <svg class="plant-illustration" viewBox="0 0 180 190" role="img" aria-label="{{ item.care.stage }} flower illustration">
-                            <path d="M90 164C89 133 91 102 89 72" fill="none" stroke="#63856B" stroke-width="4" stroke-linecap="round"/>
-                            <path d="M90 131C70 113 54 114 44 120C54 136 69 141 90 137" fill="#A9C3A1"/>
-                            <path d="M90 111C109 92 124 93 135 99C125 115 110 121 90 117" fill="#8EAF8A"/>
-                            <path d="M52 166C75 160 103 160 128 166" fill="none" stroke="#C7B99F" stroke-width="2" stroke-linecap="round"/>
-                            <g transform="translate(89 66)">
-                                <ellipse cy="-19" rx="9" ry="17" fill="#D99591"/>
-                                <ellipse cx="18" cy="-6" rx="9" ry="17" transform="rotate(58 18 -6)" fill="#E5A9A1"/>
-                                <ellipse cx="11" cy="15" rx="9" ry="17" transform="rotate(122 11 15)" fill="#D99591"/>
-                                <ellipse cx="-11" cy="15" rx="9" ry="17" transform="rotate(58 -11 15)" fill="#E5A9A1"/>
-                                <ellipse cx="-18" cy="-6" rx="9" ry="17" transform="rotate(122 -18 -6)" fill="#D99591"/>
-                                <circle r="8" fill="#E9BD77"/>
+                            <g class="plant-growth-shape">
+                                <path d="M90 164C89 133 91 102 89 72" fill="none" stroke="#63856B" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M90 131C70 113 54 114 44 120C54 136 69 141 90 137" fill="#A9C3A1"/>
+                                <path d="M90 111C109 92 124 93 135 99C125 115 110 121 90 117" fill="#8EAF8A"/>
+                                {% if item.care.stage_key == "bloom" %}
+                                    <g transform="translate(89 66)">
+                                        <ellipse cy="-19" rx="9" ry="17" fill="#D99591"/>
+                                        <ellipse cx="18" cy="-6" rx="9" ry="17" transform="rotate(58 18 -6)" fill="#E5A9A1"/>
+                                        <ellipse cx="11" cy="15" rx="9" ry="17" transform="rotate(122 11 15)" fill="#D99591"/>
+                                        <ellipse cx="-11" cy="15" rx="9" ry="17" transform="rotate(58 -11 15)" fill="#E5A9A1"/>
+                                        <ellipse cx="-18" cy="-6" rx="9" ry="17" transform="rotate(122 -18 -6)" fill="#D99591"/>
+                                        <circle r="8" fill="#E9BD77"/>
+                                    </g>
+                                {% elif item.care.stage_key == "bud" %}
+                                    <ellipse cx="89" cy="66" rx="10" ry="15" fill="#D99591"/>
+                                    <path d="M79 73Q89 86 99 73" fill="#8EAF8A"/>
+                                {% else %}
+                                    <path d="M89 77C74 67 75 57 79 51C93 58 97 67 89 77Z" fill="#A9C3A1"/>
+                                {% endif %}
                             </g>
+                            <path d="M52 166C75 160 103 160 128 166" fill="none" stroke="#C7B99F" stroke-width="2" stroke-linecap="round"/>
                             <circle cx="39" cy="68" r="3" fill="#D9B56F"/>
                             <circle cx="140" cy="54" r="2.5" fill="#D99591"/>
                         </svg>
-                        <span class="plant-art-label" aria-hidden="true">growing with love</span>
+                        <span class="plant-art-label">
+                            {% if item.care.animation == "growing" %}A new note is helping you grow
+                            {% elif item.care.animation == "wilting" %}A little water will bring me back
+                            {% else %}Growing with love{% endif %}
+                        </span>
                     </div>
                     <div class="plant-details">
                         <p class="plant-owner">{% if item.is_mine %}Your flower{% else %}{{ item.owner.username }}'s flower{% endif %}</p>
                         <h2>{{ item.care.stage }}</h2>
                         <p class="stage-description">{{ item.care.stage_description }}</p>
-                        <div class="care-status">
+                        <div class="care-status{% if item.care.needs_water %} care-status-thirsty{% endif %}">
                             <span class="care-status-dot" aria-hidden="true"></span>
                             <span>{{ item.care.status }}</span>
                         </div>
+                        {% if item.is_mine and item.care.animation == "growing" %}
+                            <a class="text-link plant-unread-note" href="{% url 'romantic_messages:history' %}">Read your partner's note</a>
+                        {% endif %}
                         <p class="care-description">{{ item.care.status_description }}</p>
                         <div class="watered-time">
                             <span class="water-drop" aria-hidden="true">⌁</span>

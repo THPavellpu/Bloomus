@@ -94,7 +94,7 @@ class RomanticMessageTests(TestCase):
         self.assertEqual(note.sent_at, self.plant.last_watered_at)
         self.assertIsNone(note.read_at)
 
-    def test_message_updates_care_and_growth_from_server_timestamps(self):
+    def test_message_updates_care_and_grows_plant_from_first_note(self):
         old_created_at = timezone.now() - timedelta(days=10)
         FlowerPlant.objects.filter(pk=self.plant.pk).update(
             created_at=old_created_at,
@@ -110,7 +110,7 @@ class RomanticMessageTests(TestCase):
             has_partner=True,
             now=note.sent_at,
         )
-        self.assertEqual(care.stage, "Bud")
+        self.assertEqual(care.stage, "Sprout")
         self.assertEqual(care.status, "Feeling loved")
         self.assertEqual(self.plant.last_watered_at, note.sent_at)
 

@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from couples.models import CoupleMembership
+from messages.services import received_notes_for
 
 from .models import FlowerPlant
 from .services import get_plant_care
@@ -19,6 +20,12 @@ def dashboard(request):
     plants = []
     has_partner = False
     just_watered_plant_id = request.session.pop("just_watered_plant_id", None)
+    unread_plant_ids = set(
+        received_notes_for(request.user)
+        .filter(read_at__isnull=True)
+        .values_list("watered_plant_id", flat=True)
+    )
+    now = timezone.now()
 
     if membership is not None:
         partner_membership = (
@@ -51,7 +58,8 @@ def dashboard(request):
                         "care": get_plant_care(
                             plant,
                             has_partner=has_partner,
-                            now=timezone.now(),
+                            has_unread_note=plant.pk in unread_plant_ids,
+                            now=now,
                         ),
                     }
                 )

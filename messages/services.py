@@ -2,6 +2,7 @@ import time
 from datetime import timedelta
 
 from django.db import IntegrityError, OperationalError, connection, transaction
+from django.db.models import F
 from django.utils import timezone
 
 from couples.models import Couple, CoupleMembership
@@ -24,6 +25,17 @@ class DuplicateSubmission(MessageRuleError):
 
 class MessageRateLimitExceeded(MessageRuleError):
     pass
+
+
+def received_notes_for(user):
+    if not user.is_authenticated:
+        return RomanticMessage.objects.none()
+    return RomanticMessage.objects.filter(
+        recipient=user,
+        couple__memberships__user=user,
+        sender__couple_membership__couple_id=F("couple_id"),
+        watered_plant__owner=user,
+    ).exclude(sender=user)
 
 
 def _send_message_once(sender, body, idempotency_key):

@@ -5,20 +5,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f8f5ed">
-    <title>{% block title %}Bloom Together{% endblock %}</title>
+    <title>{% block title %}BloomUs{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
 </head>
 <body>
     <header class="site-header">
-        <a class="brand" href="{% url 'home' %}" aria-label="Bloom Together home">
+        <a class="brand" href="{% url 'home' %}" aria-label="BloomUs home">
             <span class="brand-mark" aria-hidden="true">✿</span>
-            <span>Bloom <span class="brand-light">Together</span></span>
+            <span>Bloom<span class="brand-light">Us</span></span>
         </a>
         <nav class="header-nav" aria-label="Main navigation">
             {% if user.is_authenticated %}
                 <span class="welcome-note">Hello, {{ user.username }}</span>
                 <a class="text-link" href="{% url 'garden:dashboard' %}">Our garden</a>
-                <a class="text-link" href="{% url 'romantic_messages:history' %}">Love notes</a>
+                <a class="text-link notes-link" href="{% url 'romantic_messages:history' %}">
+                    Love notes
+                    {% if unread_note_count %}
+                        <span class="notes-notification-dot" aria-hidden="true"></span>
+                        <span class="visually-hidden">{{ unread_note_count }} unread partner note{{ unread_note_count|pluralize }}</span>
+                    {% endif %}
+                </a>
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button class="text-link" type="submit">Sign out</button>

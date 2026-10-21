@@ -1,4 +1,4 @@
-# Bloom Together
+# BloomUs
 
 A mobile-first Django app for couples. The foundation includes a custom user
 model and botanical landing page. It supports private couple connections,
@@ -42,9 +42,20 @@ reserves the first membership slot; accepting it creates the partner's
 membership. Database constraints limit each couple to two members, each user
 to one couple, and each user to one plant.
 
-Plants are created as each couple membership is established. The dashboard
-derives growth stages from the plant's creation time and care status from
-server-managed watering timestamps. It does not accept client-supplied
+Plants are created as each couple membership is established. They start as
+baby plants and grow from successfully received partner notes: sprout at 1,
+bud at 3, and bloom at 7. Growth is derived from persisted watering messages,
+not elapsed age or page visits. A plant needs water every three hours.
+Within that window, an unread note plays a small positive animation on each
+garden visit; once notes are read, the plant is calm. After three hours without
+water it shows a gentle, reversible droop, even if an older note is unread.
+An unwatered plant has a three-hour grace period after creation; a plant still
+waiting for a partner stays calm. Earned growth is never lost and plants never
+permanently die. Animations respect reduced-motion preferences.
+
+A red dot on **Love notes** indicates unread partner notes and remains until
+they are explicitly marked read. Care uses server-managed watering timestamps.
+The app does not accept client-supplied
 timestamps. Use **Write a message & water** on your partner's plant to send a
 private note and water it in one transaction. Notes are limited to 500
 characters, duplicate submissions are ignored, and each user may send up to
@@ -71,17 +82,59 @@ WhiteNoise serves collected static files in production. Run
 `python manage.py collectstatic --noinput` during the Render build. Do not
 commit `.env` or real credentials.
 
-For the Render web service, use this build command:
+For a Render native Python web service whose service root contains `manage.py`
+and Render's `.venv` directory, use this build command. It installs and checks
+Gunicorn with the same virtual environment used to start the service:
 
 ```text
-pip install -r requirements.txt && python manage.py collectstatic --noinput
+.venv/bin/python -m pip install -r requirements.txt && .venv/bin/python manage.py collectstatic --noinput && test -x .venv/bin/gunicorn && .venv/bin/gunicorn --version
 ```
 
 Use this start command:
 
 ```text
-gunicorn config.wsgi:application
+.venv/bin/gunicorn config.wsgi:application
 ```
+
+These are Linux commands for Render, not Windows PowerShell commands. Gunicorn
+is a Linux production server; continue using `manage.py runserver` on Windows.
+
+### Render startup troubleshooting
+
+If the build succeeds but startup reports `gunicorn: command not found` or
+`python: command not found`, the startup shell cannot resolve that executable
+on its `PATH`. A successful build does not prove that the runtime has the same
+environment or that its virtual environment was retained.
+
+In **BloomUs > Settings**, check that:
+
+- The runtime is **Python** and the root directory contains `manage.py`.
+- The deployed branch and commit contain the intended project files.
+- The build and start commands match the commands above.
+- No manually configured `PATH` or `VIRTUAL_ENV` replaces Render's environment.
+- Any `PYTHON_VERSION` override selects a Python version supported by the
+  installed Django release. Local Python is 3.14.5; this repository does not
+  pin Render's Python version.
+- If a Blueprint manages the service, inspect its configured YAML path and
+  `runtime`, `rootDir`, `buildCommand`, and `startCommand`. This repository
+  contains no `render.yaml`; dashboard or externally managed Blueprint
+  settings cannot be verified from the local checkout.
+
+If Render Shell is available, run these read-only diagnostics there:
+
+```sh
+pwd
+printf 'PATH=%s\n' "$PATH"
+command -v python python3 gunicorn
+ls -l /opt/render/project/src/.venv/bin/python /opt/render/project/src/.venv/bin/gunicorn
+/opt/render/project/src/.venv/bin/gunicorn --version
+```
+
+If the explicit Gunicorn version command succeeds, the virtual-environment
+start command above bypasses a PATH-resolution problem. If the file is
+missing or its interpreter cannot execute, investigate the runtime, service
+root, and build-artifact retention instead; changing the start command alone
+will not fix that case. Do not copy the Windows `.venv` directory to Render.
 
 Run database migrations against the Render PostgreSQL database only after
 confirming the `DATABASE_URL` is the intended database.

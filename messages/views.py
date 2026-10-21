@@ -9,11 +9,11 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from couples.models import CoupleMembership
 
 from .forms import RomanticMessageForm
-from .models import RomanticMessage
 from .services import (
     DuplicateSubmission,
     MessageRateLimitExceeded,
     MessageRuleError,
+    received_notes_for,
     send_message_and_water,
 )
 
@@ -74,18 +74,7 @@ def write_message(request):
 @login_required
 @require_GET
 def message_history(request):
-    couple_id = CoupleMembership.objects.filter(
-        user=request.user
-    ).values_list("couple_id", flat=True).first()
-    received_messages = RomanticMessage.objects.none()
-    if couple_id is not None:
-        received_messages = (
-            RomanticMessage.objects.filter(
-                recipient=request.user,
-                couple_id=couple_id,
-            )
-            .select_related("sender")
-        )
+    received_messages = received_notes_for(request.user).select_related("sender")
     return render(
         request,
         "messages/history.html",
@@ -98,9 +87,7 @@ def message_history(request):
 def mark_message_read(request, message_id):
     with transaction.atomic():
         message = get_object_or_404(
-            RomanticMessage.objects.select_for_update().filter(
-                couple__memberships__user=request.user,
-            ),
+            received_notes_for(request.user).select_for_update(),
             pk=message_id,
             recipient=request.user,
         )
