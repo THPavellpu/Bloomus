@@ -125,12 +125,12 @@
                     <p class="invitation-help">The link takes your partner through sign-up or sign-in and connects you automatically. Keep it private.</p>
                     <p class="invitation-help" id="invitation-share-status" role="status" aria-live="polite"></p>
                 {% else %}
-                    <p class="invitation-refresh-note">Your previous code is not shown again for privacy. Create a fresh one to share it.</p>
+                    <p class="invitation-refresh-note">Your previous code and link are not shown again for privacy. Create a fresh invitation to share them; this replaces the old code and link.</p>
                 {% endif %}
             </div>
             <form method="post" action="{% url 'couples:invite' %}">
                 {% csrf_token %}
-                <button class="button button-outline" type="submit">Create a fresh code</button>
+                <button class="button button-outline" type="submit">Create a fresh invitation</button>
             </form>
         </section>
     {% endif %}

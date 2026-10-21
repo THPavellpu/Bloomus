@@ -250,7 +250,10 @@ class InvitationOnboardingTests(TestCase):
         partner = User.objects.create_user(
             username="existing_partner", password="MossyMeadow!9274"
         )
-        self.client.post(self.url)
+        self.assertRedirects(
+            self.client.post(self.url, {"auth_action": "login"}),
+            reverse("login"),
+        )
         response = self.client.get(reverse("login"))
         self.assertContains(response, "Sign in to connect automatically")
         response = self.client.post(

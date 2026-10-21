@@ -42,6 +42,8 @@ def invitation_link(request, code):
             if request.user.is_authenticated:
                 complete_pending_invitation(request)
                 return redirect("garden:dashboard")
+            if request.POST.get("auth_action") == "login":
+                return redirect("login")
             return redirect("signup")
 
     response = render(
