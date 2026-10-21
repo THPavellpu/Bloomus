@@ -1,4 +1,6 @@
 import hashlib
+import os
+import runpy
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
@@ -6,7 +8,8 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, close_old_connections, connections, transaction
-from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.conf import settings
+from django.test import Client, SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -228,7 +231,7 @@ class InvitationOnboardingTests(TestCase):
         self.assertContains(response, "Continue with this invitation")
         self.assertEqual(CoupleMembership.objects.count(), 1)
         self.assertNotIn("pending_invitation_code", self.client.session)
-        self.assertEqual(response["Referrer-Policy"], "no-referrer")
+        self.assertEqual(response["Referrer-Policy"], "same-origin")
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_new_user_signs_up_and_connects_automatically(self):
@@ -339,6 +342,225 @@ class InvitationOnboardingTests(TestCase):
         csrf_client.get(self.url)
         self.assertEqual(csrf_client.post(self.url).status_code, 403)
         self.assertNotIn("pending_invitation_code", csrf_client.session)
+
+
+@override_settings(
+    PASSWORD_HASHERS=[FAST_PASSWORD_HASHER],
+    DEBUG=False,
+    ALLOWED_HOSTS=["bloomus.onrender.com"],
+    CSRF_TRUSTED_ORIGINS=["https://bloomus.onrender.com"],
+    SECURE_SSL_REDIRECT=True,
+    SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+    SESSION_COOKIE_SECURE=True,
+    CSRF_COOKIE_SECURE=True,
+    SECURE_REFERRER_POLICY="same-origin",
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    },
+)
+class ProductionInvitationCsrfTests(TestCase):
+    host = "bloomus.onrender.com"
+    origin = "https://bloomus.onrender.com"
+
+    def setUp(self):
+        self.client = Client(enforce_csrf_checks=True, HTTP_HOST=self.host)
+        self.inviter = User.objects.create_user(username="csrf_inviter")
+        self.created = create_invitation(self.inviter)
+        self.url = reverse("couples:invitation_link", args=(self.created.code,))
+
+    def get_page(self, url):
+        return self.client.get(url, secure=True)
+
+    def post_form(self, url, data=None, *, origin=None):
+        return self.client.post(
+            url,
+            {
+                **(data or {}),
+                "csrfmiddlewaretoken": self.client.cookies["csrftoken"].value,
+            },
+            secure=True,
+            HTTP_ORIGIN=self.origin if origin is None else origin,
+        )
+
+    def test_https_invitation_signup_and_automatic_acceptance_with_csrf(self):
+        preview = self.get_page(self.url)
+        self.assertEqual(preview["Referrer-Policy"], "same-origin")
+        self.assertContains(preview, 'name="csrfmiddlewaretoken"')
+        self.assertEqual(preview["X-Frame-Options"], "DENY")
+        self.assertRedirects(
+            self.post_form(self.url), reverse("signup"), fetch_redirect_response=False
+        )
+        signup = self.get_page(reverse("signup"))
+        self.assertContains(signup, 'name="csrfmiddlewaretoken"')
+        self.assertEqual(signup["Referrer-Policy"], "same-origin")
+        response = self.post_form(
+            reverse("signup"),
+            {
+                "username": "csrf_new_partner",
+                "email": "csrf-partner@example.com",
+                "password1": "MossyMeadow!9274",
+                "password2": "MossyMeadow!9274",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("garden:dashboard"))
+        partner = User.objects.get(username="csrf_new_partner")
+        self.assertEqual(
+            partner.couple_membership.couple_id, self.created.invitation.couple_id
+        )
+        self.assertEqual(int(self.client.session["_auth_user_id"]), partner.pk)
+        self.assertNotIn("pending_invitation_code", self.client.session)
+        self.created.invitation.refresh_from_db()
+        self.assertIsNotNone(self.created.invitation.used_at)
+        self.assertTrue(self.client.cookies["csrftoken"]["secure"])
+        self.assertTrue(self.client.cookies["sessionid"]["secure"])
+
+    def test_https_invitation_login_and_automatic_acceptance_with_csrf(self):
+        partner = User.objects.create_user(
+            username="csrf_existing_partner", password="MossyMeadow!9274"
+        )
+        self.get_page(self.url)
+        response = self.post_form(self.url, {"auth_action": "login"})
+        self.assertEqual(response.url, reverse("login"))
+        login_page = self.get_page(reverse("login"))
+        self.assertContains(login_page, 'name="csrfmiddlewaretoken"')
+        self.assertEqual(login_page["Referrer-Policy"], "same-origin")
+        response = self.post_form(
+            reverse("login"),
+            {"username": partner.username, "password": "MossyMeadow!9274"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(partner.couple_membership.slot, 2)
+        self.assertNotIn("pending_invitation_code", self.client.session)
+
+    def test_signed_in_link_and_pasted_code_accept_with_csrf(self):
+        for flow in ("link", "code"):
+            with self.subTest(flow=flow):
+                if flow == "code":
+                    self.inviter = User.objects.create_user(username="csrf_code_inviter")
+                    self.created = create_invitation(self.inviter)
+                partner = User.objects.create_user(username=f"csrf_{flow}_partner")
+                self.client.force_login(partner)
+                self.get_page(reverse("garden:dashboard"))
+                if flow == "link":
+                    self.get_page(self.url)
+                    response = self.post_form(self.url)
+                else:
+                    response = self.post_form(
+                        reverse("couples:accept"), {"code": self.created.code}
+                    )
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(
+                    partner.couple_membership.couple_id,
+                    self.created.invitation.couple_id,
+                )
+                self.client.logout()
+
+    def test_null_and_foreign_origins_rejected_even_with_valid_tokens(self):
+        self.get_page(self.url)
+        for origin in ("null", "https://untrusted.example"):
+            with self.subTest(origin=origin):
+                response = self.post_form(self.url, origin=origin)
+                self.assertEqual(response.status_code, 403)
+                self.assertNotIn("pending_invitation_code", self.client.session)
+        self.assertEqual(CoupleMembership.objects.count(), 1)
+        self.created.invitation.refresh_from_db()
+        self.assertIsNone(self.created.invitation.used_at)
+
+    def test_signup_and_login_reject_null_origin_before_linking(self):
+        self.get_page(self.url)
+        self.post_form(self.url)
+        for route in ("signup", "login"):
+            self.get_page(reverse(route))
+            self.assertEqual(
+                self.post_form(reverse(route), origin="null").status_code, 403
+            )
+        self.assertEqual(CoupleMembership.objects.count(), 1)
+
+    def test_valid_origin_still_requires_csrf_token(self):
+        self.get_page(self.url)
+        response = self.client.post(
+            self.url, secure=True, HTTP_ORIGIN=self.origin
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn("pending_invitation_code", self.client.session)
+
+    def test_https_referer_fallback_when_browser_omits_origin(self):
+        self.get_page(self.url)
+        response = self.client.post(
+            self.url,
+            {"csrfmiddlewaretoken": self.client.cookies["csrftoken"].value},
+            secure=True,
+            HTTP_REFERER=self.origin + self.url,
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("pending_invitation_code", self.client.session)
+
+    def test_render_proxy_generates_https_invitation_link(self):
+        self.client.force_login(self.inviter)
+        self.get_page(reverse("garden:dashboard"))
+        self.post_form(reverse("couples:invite"))
+        response = self.client.get(
+            reverse("garden:dashboard"), HTTP_X_FORWARDED_PROTO="https"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            response.context["new_invitation_url"].startswith(
+                self.origin + "/couples/join/"
+            )
+        )
+        self.assertEqual(response["Referrer-Policy"], "same-origin")
+
+    def test_http_redirects_to_https_before_rendering_forms(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 301)
+        self.assertEqual(response.url, self.origin + self.url)
+
+
+class RenderEnvironmentTests(SimpleTestCase):
+    def load_settings(self, environment):
+        with (
+            patch.dict(
+                os.environ,
+                {
+                    # A public test fixture, never a deployment credential.
+                    "SECRET_KEY": "test-only-not-a-deployment-secret-0123456789-abcdefghijklmnopqrstuvwxyz",
+                    **environment,
+                },
+                clear=True,
+            ),
+            patch("dotenv.load_dotenv"),
+        ):
+            return runpy.run_path(str(settings.BASE_DIR / "config" / "settings.py"))
+
+    def test_render_forces_debug_off_even_with_stale_true_variable(self):
+        for marker in (
+            {"RENDER": "true"},
+            {"RENDER_EXTERNAL_HOSTNAME": "bloomus.onrender.com"},
+        ):
+            with self.subTest(marker=marker):
+                configured = self.load_settings({"DEBUG": "True", **marker})
+                self.assertFalse(configured["DEBUG"])
+                self.assertTrue(configured["SECURE_SSL_REDIRECT"])
+                self.assertTrue(configured["CSRF_COOKIE_SECURE"])
+                self.assertEqual(configured["SECURE_REFERRER_POLICY"], "same-origin")
+
+    def test_render_hostname_and_custom_origins_are_preserved(self):
+        configured = self.load_settings({
+            "RENDER_EXTERNAL_HOSTNAME": "bloomus.onrender.com",
+            "ALLOWED_HOSTS": "couples.example",
+            "CSRF_TRUSTED_ORIGINS": "https://couples.example",
+        })
+        self.assertIn("bloomus.onrender.com", configured["ALLOWED_HOSTS"])
+        self.assertEqual(
+            configured["CSRF_TRUSTED_ORIGINS"],
+            ["https://couples.example", "https://bloomus.onrender.com"],
+        )
+        self.assertNotIn("null", configured["CSRF_TRUSTED_ORIGINS"])
+
+    def test_local_development_debug_default_is_unchanged(self):
+        self.assertTrue(self.load_settings({})["DEBUG"])
 
 
 @override_settings(PASSWORD_HASHERS=[FAST_PASSWORD_HASHER])

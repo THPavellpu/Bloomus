@@ -28,7 +28,9 @@ def env_list(name, default):
 
 
 debug_setting_name = "DEBUG" if os.getenv("DEBUG") is not None else "DJANGO_DEBUG"
-DEBUG = env_bool(debug_setting_name, True)
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+is_render = os.getenv("RENDER", "").strip().lower() == "true" or bool(render_hostname)
+DEBUG = False if is_render else env_bool(debug_setting_name, True)
 SECRET_KEY = os.getenv("SECRET_KEY") or os.getenv(
     "DJANGO_SECRET_KEY",
     "django-insecure-local-development-only-change-before-deployment",
@@ -44,7 +46,6 @@ ALLOWED_HOSTS = env_list(
     "ALLOWED_HOSTS",
     env_list("DJANGO_ALLOWED_HOSTS", ["localhost", "127.0.0.1", "[::1]"]),
 )
-render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
 if render_hostname and render_hostname not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(render_hostname)
 
@@ -98,6 +99,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+SECURE_REFERRER_POLICY = "same-origin"
 
 database_url = os.getenv("DATABASE_URL", "").strip()
 database_engine = os.getenv("DB_ENGINE", "sqlite").strip().lower()

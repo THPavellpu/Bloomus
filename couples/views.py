@@ -52,7 +52,7 @@ def invitation_link(request, code):
         {"inviter": inviter, "invitation_error": error},
         status=400 if error else 200,
     )
-    response["Referrer-Policy"] = "no-referrer"
+    response["Referrer-Policy"] = "same-origin"
     return response
 
 

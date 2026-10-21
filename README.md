@@ -94,6 +94,49 @@ hostname to allowed hosts and its HTTPS origin to trusted origins. The
 existing `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, and `DJANGO_ALLOWED_HOSTS` names
 remain supported as fallbacks for local setups.
 
+Render always runs with `DEBUG=False` when `RENDER=true` or
+`RENDER_EXTERNAL_HOSTNAME` is present, even if a stale `DEBUG=True` or
+`DJANGO_DEBUG=True` variable exists. Keep the dashboard variable set to
+`DEBUG=False` as well. The existing production secret is required; do not
+replace it to resolve an origin error.
+
+### Invitation CSRF and production origins
+
+For the BloomUs Render service, use these non-secret dashboard values:
+
+```text
+DEBUG=False
+ALLOWED_HOSTS=bloomus.onrender.com
+CSRF_TRUSTED_ORIGINS=https://bloomus.onrender.com
+```
+
+Keep the existing `SECRET_KEY` and `DATABASE_URL` unchanged. Render's
+`RENDER_EXTERNAL_HOSTNAME` also automatically allows this host and trusts its
+HTTPS origin. Additional custom domains need their own host and HTTPS origin.
+Origins must include the scheme, with no path or trailing slash; never add
+`null` or disable CSRF middleware.
+
+Invitation links are generated from the validated request host and scheme.
+Production redirects HTTP to HTTPS and recognizes Render's
+`X-Forwarded-Proto: https`. Open invitations directly in a normal HTTPS tab,
+not a saved `file://` page or sandboxed preview.
+
+The invitation page uses `Referrer-Policy: same-origin`. Do not change it to
+`no-referrer`: browsers can send `Origin: null` for a normal form POST under
+that policy, causing Django to reject even a valid CSRF token. `same-origin`
+preserves the origin/referer required by internal forms while withholding the
+private invitation URL on cross-origin requests. Frames are denied.
+All invitation and authentication POSTs use Django-rendered CSRF tokens;
+the sharing script only copies/shares URLs and makes no POST or fetch requests.
+
+If an invitation was opened before deploying this fix, close that tab and
+reopen the public HTTPS link after deployment so the browser receives the new
+response header. To verify in browser developer tools, the invitation GET
+must return `Referrer-Policy: same-origin`, and its POST must have
+`Origin: https://bloomus.onrender.com` (not `null`). An origin-less HTTPS POST
+must instead have a same-origin HTTPS Referer. Keep codes, cookies and CSRF
+tokens private when sharing diagnostic details.
+
 WhiteNoise serves collected static files in production. Run
 `python manage.py collectstatic --noinput` during the Render build. Do not
 commit `.env` or real credentials.
