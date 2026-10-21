@@ -37,7 +37,23 @@ activation.
 
 After signing in, visit `/garden/` to create an invitation or enter a
 partner's invitation code. Codes are shown once to the inviter, stored only
-as a hash, expire after seven days, and are single-use. Creating an invitation
+as a hash, expire after seven days, and are single-use. New codes use readable,
+case-insensitive groups (for example `BU-ABCD-EFGH-JKLM-NPQR`); spaces and
+hyphens may be omitted when pasting them. Previously issued codes still work.
+The invitation panel offers **Copy code**, **Copy link**, and **Share invitation**
+(using the device share sheet where available, or copying the link).
+Share only with your partner: anyone holding an unused code or link can join.
+
+A link opens an invitation preview. After choosing to continue, a new partner
+can sign up, or an existing user can sign in, and BloomUs automatically accepts
+the invitation using the same single-use, expiry, and membership rules.
+Opening a link alone never connects accounts. If it expires or is used before
+authentication finishes, the account stays usable and a clear error is shown.
+No extra code entry is needed. Normal sign-up without an invitation is unchanged.
+Use the public HTTPS site when copying links for your partner; local development
+links point at your local server and aren't publicly accessible.
+
+Creating an invitation
 reserves the first membership slot; accepting it creates the partner's
 membership. Database constraints limit each couple to two members, each user
 to one couple, and each user to one plant.

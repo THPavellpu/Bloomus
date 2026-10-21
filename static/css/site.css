@@ -280,6 +280,11 @@ h1 span { color: var(--leaf); font-style: italic; }
 .invitation-label { display: block; margin-top: 15px; font-weight: 600; }
 .invitation-code { display: block; width: min(100%, 390px); margin-top: 6px; font-family: Consolas, monospace; letter-spacing: .04em; }
 .invitation-refresh-note { color: #8b7768 !important; }
+.invitation-explanation { margin: 18px 0; color: var(--ink-soft); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+.invitation-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.invitation-copy { margin-top: 10px; }
+.invitation-link { font-size: 11px; letter-spacing: normal; }
+.invitation-help { margin: 5px 0; color: var(--ink-soft); font-size: 11px; line-height: 1.7; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 
 @keyframes flower-sway { from { transform: rotate(-2deg); } to { transform: rotate(2deg); } }

@@ -5,6 +5,9 @@
     <div class="form-card">
         <p class="eyebrow"><span class="eyebrow-line"></span> Welcome back</p>
         <h1>Pick up where<br><span>your love grows.</span></h1>
+        {% if has_pending_invitation %}
+            <p class="invitation-explanation">Your partner's invitation is ready. Sign in to connect automatically.</p>
+        {% endif %}
         <form method="post" class="account-form">
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}

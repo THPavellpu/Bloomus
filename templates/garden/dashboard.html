@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Our Garden — BloomUs{% endblock %}
 {% block content %}
 <section class="garden-dashboard">
@@ -97,7 +98,8 @@
                 <form class="join-form" method="post" action="{% url 'couples:accept' %}">
                     {% csrf_token %}
                     <label for="invitation-code">Invitation code</label>
-                    <input id="invitation-code" name="code" type="text" required maxlength="128" autocomplete="off" placeholder="Paste the code they shared">
+                    <input id="invitation-code" name="code" type="text" required maxlength="128" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="invitation-code-help" placeholder="e.g. BU-ABCD-EFGH-JKLM-NPQR">
+                    <p class="invitation-help" id="invitation-code-help">Paste your partner's code here. Uppercase or lowercase is fine.</p>
                     <button class="button button-outline" type="submit">Join your partner</button>
                 </form>
             </div>
@@ -109,10 +111,19 @@
             <div>
                 <p class="eyebrow"><span class="eyebrow-line"></span> Your invitation</p>
                 <h2>Your flower is ready for your person.</h2>
-                <p>Share your code privately. It expires in seven days and can only be used once.</p>
+                <p>Send your partner a code or a link. Both expire in seven days and can only connect one partner.</p>
                 {% if new_invitation_code %}
                     <label class="invitation-label" for="new-invitation-code">Your private invitation code</label>
                     <input class="invitation-code" id="new-invitation-code" type="text" readonly value="{{ new_invitation_code }}" aria-label="Invitation code; select and copy to share privately">
+                    <button class="button button-outline invitation-copy" type="button" data-copy-target="new-invitation-code">Copy code</button>
+                    <label class="invitation-label" for="new-invitation-link">Or share an invitation link</label>
+                    <input class="invitation-code invitation-link" id="new-invitation-link" type="url" readonly value="{{ new_invitation_url }}">
+                    <div class="invitation-actions">
+                        <button class="button button-outline" type="button" data-copy-target="new-invitation-link">Copy link</button>
+                        <button class="button" type="button" data-share-target="new-invitation-link">Share invitation</button>
+                    </div>
+                    <p class="invitation-help">The link takes your partner through sign-up or sign-in and connects you automatically. Keep it private.</p>
+                    <p class="invitation-help" id="invitation-share-status" role="status" aria-live="polite"></p>
                 {% else %}
                     <p class="invitation-refresh-note">Your previous code is not shown again for privacy. Create a fresh one to share it.</p>
                 {% endif %}
@@ -124,4 +135,7 @@
         </section>
     {% endif %}
 </section>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/invitations.js' %}" defer></script>
 {% endblock %}

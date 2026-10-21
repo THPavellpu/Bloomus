@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 
 from couples.models import CoupleMembership
@@ -64,12 +65,16 @@ def dashboard(request):
                     }
                 )
 
+    invitation_code = request.session.pop("new_invitation_code", None)
     context = {
         "membership": membership,
         "partner": partner,
         "plants": plants,
-        "new_invitation_code": request.session.pop(
-            "new_invitation_code", None
-        ),
+        "new_invitation_code": invitation_code,
+        "new_invitation_url": request.build_absolute_uri(
+            reverse("couples:invitation_link", args=(invitation_code,))
+        ) if invitation_code else None,
     }
-    return render(request, "garden/dashboard.html", context)
+    response = render(request, "garden/dashboard.html", context)
+    response["Cache-Control"] = "no-store"
+    return response

@@ -1,4 +1,5 @@
 import hashlib
+import re
 import secrets
 import time
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ from .models import Couple, CoupleMembership, Invitation
 
 
 INVITATION_LIFETIME = timedelta(days=7)
+CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 
 class CoupleRuleError(Exception):
@@ -29,8 +31,36 @@ def _hash_code(code):
     return hashlib.sha256(code.encode("utf-8")).hexdigest()
 
 
+def normalize_invitation_code(code):
+    compact = re.sub(r"[\s-]", "", code).upper()
+    if re.fullmatch(r"BU[A-HJ-NP-Z2-9]{16}", compact):
+        return "BU-" + "-".join(compact[index:index + 4] for index in range(2, 18, 4))
+    return code.strip()
+
+
+def available_invitation(code):
+    normalized_code = normalize_invitation_code(code)
+    if not normalized_code or len(normalized_code) > 128:
+        raise CoupleRuleError("That invitation is not valid.")
+    invitation = Invitation.objects.select_related("couple").filter(
+        token_hash=_hash_code(normalized_code),
+    ).first()
+    if invitation is None:
+        raise CoupleRuleError("That invitation is not valid.")
+    if invitation.used_at is not None:
+        raise CoupleRuleError("That invitation has already been used.")
+    if invitation.expires_at <= timezone.now():
+        raise CoupleRuleError("That invitation has expired.")
+    if list(invitation.couple.memberships.values_list("slot", flat=True)) != [1]:
+        raise CoupleRuleError("That invitation is no longer available.")
+    return invitation
+
+
 def create_invitation(user):
-    code = secrets.token_urlsafe(32)
+    code = "BU-" + "-".join(
+        "".join(secrets.choice(CODE_ALPHABET) for _ in range(4))
+        for _ in range(4)
+    )
 
     for attempt in range(8):
         try:
@@ -95,7 +125,7 @@ def _create_invitation_once(user, code):
 
 
 def accept_invitation(user, code):
-    normalized_code = code.strip()
+    normalized_code = normalize_invitation_code(code)
     if not normalized_code or len(normalized_code) > 128:
         raise CoupleRuleError("That invitation is not valid.")
 

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Your invitation — BloomUs{% endblock %}
+{% block content %}
+<section class="form-page">
+    <div class="form-card">
+        <p class="eyebrow"><span class="eyebrow-line"></span> A little world for two</p>
+        {% if invitation_error %}
+            <h1>Let's find<br><span>a fresh start.</span></h1>
+            <p class="invitation-explanation" role="alert">{{ invitation_error }} Ask your partner for a fresh invitation code or link.</p>
+            <a class="button" href="{% url 'garden:dashboard' %}">Go to your garden</a>
+        {% else %}
+            <h1>Grow something<br><span>lovely together.</span></h1>
+            <p class="invitation-explanation"><strong>{{ inviter.username }}</strong> has invited you to share a private garden on BloomUs.</p>
+            {% if user.is_authenticated %}
+                <p class="invitation-explanation">You're signed in as <strong>{{ user.username }}</strong>. Continue to connect this account.</p>
+            {% else %}
+                <p class="invitation-explanation">Continue, then create an account or sign in. We'll connect you automatically after that. No code to paste.</p>
+            {% endif %}
+            <form method="post" class="account-form">
+                {% csrf_token %}
+                <button class="button form-submit" type="submit">{% if user.is_authenticated %}Connect with {{ inviter.username }}{% else %}Continue with this invitation{% endif %}</button>
+            </form>
+            <p class="invitation-explanation">Private, single-use, and valid for seven days. Only continue if you know the person who shared this link.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
